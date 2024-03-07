@@ -53,6 +53,11 @@
   <string name="pref_markdown_summ">
     書式項目に使用記法
   </string>
+  <string name="selection">選定</string>
+  <string name="pref_extended">拡張選択を使用</string>
+  <string name="pref_extended_summ">
+    エントリの編集中に拡張選択を使用
+  </string>
   <string name="media">メディア</string>
   <string name="pref_copy_media">画像をコピーする</string>
   <string name="pref_copy_media_summ">
@@ -77,10 +82,6 @@
   <string name="pref_template_page">テンプレートページ</string>
   <string name="pref_index_template">インデックステンプレート</string>
   <string name="theme">テーマ</string>
-  <string name="pref_dark_theme">ダーク</string>
-  <string name="pref_dark_theme_summ">
-    編集に暗いテーマを使用する
-  </string>
   <string name="about">アプリについて</string>
   <string name="pref_about_summ"><a href="https://github.com/billthefarmer/diary/releases/latest">バージョン %s</a></string>
   <string name="licence">ライセンス <a href="https://www.gnu.org/licenses/gpl.txt">GNU GPLv3</a>

@@ -53,6 +53,11 @@
   <string name="pref_markdown_summ">
     Korzystaj z markdown do formatowania wejścia
   </string>
+  <string name="selection">Selekcja</string>
+  <string name="pref_extended">Korzystanie z rozszerzonego zaznaczenia</string>
+  <string name="pref_extended_summ">
+    Korzystanie z rozszerzonego zaznaczenia podczas edycji wpisów
+  </string>
   <string name="media">Media</string>
   <string name="pref_copy_media">Kopiuj obrazy</string>
   <string name="pref_copy_media_summ">
@@ -77,10 +82,6 @@
   <string name="pref_template_page">Strona szablonu</string>
   <string name="pref_index_template">Szablon indeksu</string>
   <string name="theme">Motyw</string>
-  <string name="pref_dark_theme">Ciemny</string>
-  <string name="pref_dark_theme_summ">
-    Użyj ciemnego motywu do edycji
-  </string>
   <string name="about">O aplikacji</string>
   <string name="pref_about_summ"><a href="https://github.com/billthefarmer/diary/releases/latest">Wersja %s</a></string>
   <string name="built">Zbudowano: %s</string>

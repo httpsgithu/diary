@@ -8,7 +8,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: "actions/checkout@v2"
+      - uses: "actions/checkout@v3"
 
       - name: Get the tag version
         id: version
@@ -22,4 +22,4 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: "Version ${{ steps.version.outputs.VERSION }}"
-          body: "![Icon](src/main/res/drawable-xhdpi/ic_launcher.png)"
+          body: "![Icon](data/ic_launcher.svg)"

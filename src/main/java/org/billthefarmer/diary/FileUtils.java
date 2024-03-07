@@ -16,7 +16,6 @@
 
 package org.billthefarmer.diary;
 
-import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
@@ -50,6 +49,7 @@ import java.util.Locale;
  * @author Bill Farmer (billthefarmer)
  * @version 2017-06-22
  */
+@SuppressWarnings("deprecation")
 public class FileUtils
 {
     /**
@@ -476,7 +476,6 @@ public class FileUtils
      * @see #isLocal(String)
      * @see #getFile(Context, Uri)
      */
-    @TargetApi(19)
     public static String getPath(final Context context, final Uri uri)
     {
 
@@ -492,8 +491,7 @@ public class FileUtils
                  );
 
         // DocumentProvider
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT &&
-            DocumentsContract.isDocumentUri(context, uri))
+        if (DocumentsContract.isDocumentUri(context, uri))
         {
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri))
@@ -517,7 +515,7 @@ public class FileUtils
                 }
                 else if ("home".equalsIgnoreCase(type))
                 {
-                    return Environment .getExternalStorageDirectory() +
+                    return Environment.getExternalStorageDirectory() +
                         "/Documents/" + id;
                 }
                 else if (type != null && type.matches("[0-9A-Z]{4}-[0-9A-Z]{4}"))
@@ -531,7 +529,7 @@ public class FileUtils
                 }
                 else if ("document".equalsIgnoreCase(segments.get(0)))
                 {
-                    return Environment .getExternalStorageDirectory() +
+                    return Environment.getExternalStorageDirectory() +
                         File.separator + id;
                 }
 

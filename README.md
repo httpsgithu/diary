@@ -1,4 +1,4 @@
-# ![Logo](src/main/res/drawable-hdpi/ic_launcher.png) Diary [![.github/workflows/main.yml](https://github.com/billthefarmer/diary/workflows/.github/workflows/main.yml/badge.svg)](https://github.com/billthefarmer/diary/actions) [![Release](https://img.shields.io/github/release/billthefarmer/diary.svg?logo=github)](https://github.com/billthefarmer/diary/releases)
+# ![Diary](ic_launcher.png) Diary [![.github/workflows/main.yml](https://github.com/billthefarmer/diary/workflows/.github/workflows/build.yml/badge.svg)](https://github.com/billthefarmer/diary/actions) [![Release](https://img.shields.io/github/release/billthefarmer/diary.svg?logo=github)](https://github.com/billthefarmer/diary/releases)
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.svg" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/org.billthefarmer.diary)
 
 
@@ -124,6 +124,11 @@ current entry. It will appear only when there are changes to cancel.
 See [Markdown](https://daringfireball.net/projects/markdown) for
 markdown syntax.
 
+## Selection
+In edit mode a long touch or double tap will select text. If extended
+selection is enabled the selection will be extended to enclosing
+quotes or brackets on the same line.
+
 ## Scrolling
 Scrolling the page up will temporarily hide the floating
 button. Scrolling down restores it.
@@ -200,6 +205,11 @@ using vertical bar characters, heading anchor, underlining using
 `++underline++`, strikethrough using `~~strike~~`, YAML front matter,
 task lists using `- [x] task #1`, `- [ ] task #2`, superscript using
 `^super^`, subscript using `~sub~`.
+
+## Task lists
+To change the state of check boxes in a task list switch to the edit
+view and tap on the box `[ ]`. The box will change state and the edit
+cursor will be where you tapped.
 
 ## LaTeX
 Diary doesn't support [LaTeX](https://en.wikipedia.org/wiki/LaTeX),
@@ -337,6 +347,8 @@ not supported. Adding media may also work, but may not be persistent.
 * **Use custom calendar** &ndash; Use custom calendar that shows diary
   entries rather than date picker calendar
 * **Use markdown** &ndash; Use markdown formatting for diary entries
+* **Use extended selection** &ndash; Use extended selection for
+    editing entries
 * **Folder** &ndash; Change diary entry storage folder. Caution &ndash;
     diary entries and styles will not be moved
 * **Index** &ndash; Set an index page. Use the date picker to choose a date.
@@ -344,5 +356,5 @@ not supported. Adding media may also work, but may not be persistent.
     choose a date.
 * **Browser** &ndash; Use browser for external links
 * **Copy images** &ndash; Copy images to current folder
-* **Dark theme** &ndash; Use dark theme for editing
+* **Theme** &ndash; Choose app theme
 * **About** &ndash; Show app version, licence and credits

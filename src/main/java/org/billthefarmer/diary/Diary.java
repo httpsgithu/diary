@@ -17,12 +17,10 @@
 package org.billthefarmer.diary;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
-import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.DialogInterface;
@@ -110,11 +108,8 @@ import org.billthefarmer.view.CustomCalendarView;
 import org.billthefarmer.view.DayDecorator;
 import org.billthefarmer.view.DayView;
 
-import org.commonmark.node.Node;
-import org.commonmark.parser.Parser;
-import org.commonmark.renderer.html.HtmlRenderer;
-
 // Diary
+@SuppressWarnings("deprecation")
 public class Diary extends Activity
     implements DatePickerDialog.OnDateSetListener,
     CustomCalendarDialog.OnDateSetListener
@@ -140,6 +135,12 @@ public class Diary extends Activity
     public static final int MARKDOWN = 1;
     public static final int ACCEPT = 0;
     public static final int EDIT = 1;
+
+    public static final int LIGHT  = 0;
+    public static final int DARK   = 1;
+    public static final int SYSTEM = 2;
+
+    public static final int VERSION_CODE_S_V2 = 32;
 
     public final static String DIARY = "Diary";
     public final static String TAG = DIARY;
@@ -172,9 +173,11 @@ public class Diary extends Activity
                         Pattern.MULTILINE);
     public final static Pattern FILE_PATTERN =
         Pattern.compile("([0-9]{4}).([0-9]{2}).([0-9]{2}).(txt|md)$");
-
     public final static Pattern TEMP_PATTERN =
         Pattern.compile("<<date *(.*)>>", Pattern.MULTILINE);
+    public final static Pattern CHECK_PATTERN = Pattern.compile
+        ("^\\s*(?:[-+*]|\\d+\\.)\\s+\\[(X|x|\\s)\\]\\s+(?=\\p{Graph}+)",
+                        Pattern.MULTILINE);
 
     public final static String DATE_FORMAT = "EEEE d MMMM yyyy HH:mm";
     public final static String TEMP_FORMAT = "EEEE d MMMM yyyy";
@@ -240,12 +243,12 @@ public class Diary extends Activity
 
     private boolean custom = true;
     private boolean markdown = true;
+    private boolean extended = true;
     private boolean external = false;
     private boolean useIndex = false;
     private boolean useTemplate = false;
     private boolean copyMedia = false;
     private boolean haveMedia = false;
-    private boolean darkTheme = false;
 
     private boolean changed = false;
     private boolean shown = true;
@@ -260,9 +263,10 @@ public class Diary extends Activity
 
     private float minScale = 1000;
 
-
     private long indexPage;
     private long templatePage;
+
+    private int theme = 0;
 
     private String folder = DIARY;
     private String template = INDEX_TEMPLATE;
@@ -439,8 +443,32 @@ public class Diary extends Activity
         // Get preferences
         getPreferences();
 
-        if (!darkTheme)
+        Configuration config = getResources().getConfiguration();
+        int night = config.uiMode & Configuration.UI_MODE_NIGHT_MASK;
+
+        switch (theme)
+        {
+        case LIGHT:
             setTheme(R.style.AppTheme);
+            break;
+
+        case DARK:
+            setTheme(R.style.AppDarkTheme);
+            break;
+
+        case SYSTEM:
+            switch (night)
+            {
+            case Configuration.UI_MODE_NIGHT_NO:
+                setTheme(R.style.AppTheme);
+                break;
+
+            case Configuration.UI_MODE_NIGHT_YES:
+                setTheme(R.style.AppDarkTheme);
+                break;
+            }
+            break;
+        }
 
         setContentView(R.layout.main);
 
@@ -475,6 +503,10 @@ public class Diary extends Activity
             if (useIndex && Intent.ACTION_MAIN.equals(intent.getAction()))
                 index();
 
+            // Check start from widget
+            else if (intent.hasExtra(DiaryWidgetProvider.ENTRY))
+                changeDate(intent.getLongExtra(DiaryWidgetProvider.ENTRY,
+                                               new Date().getTime()));
             // Set the date
             else
                 today();
@@ -506,13 +538,13 @@ public class Diary extends Activity
     {
         super.onResume();
 
-        boolean dark = darkTheme;
+        int last = theme;
 
         // Get preferences
         getPreferences();
 
         // Recreate
-        if (dark != darkTheme && Build.VERSION.SDK_INT != Build.VERSION_CODES.M)
+        if (last != theme && Build.VERSION.SDK_INT != Build.VERSION_CODES.M)
             recreate();
 
         // Set date
@@ -600,8 +632,6 @@ public class Diary extends Activity
         menu.findItem(R.id.cancel).setVisible(changed);
         menu.findItem(R.id.index).setVisible(useIndex);
         menu.findItem(R.id.link).setVisible(useIndex);
-        menu.findItem(R.id.print)
-            .setVisible(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
 
         // Set up search view
         searchItem = menu.findItem(R.id.search);
@@ -1080,6 +1110,37 @@ public class Diary extends Activity
                     imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
             });
 
+            // On click
+            textView.setOnClickListener(v ->
+            {
+                // Get selection
+                int selection = textView.getSelectionStart();
+
+                // Get text position
+                int line = textView.getLayout().getLineForOffset(selection);
+                int start = textView.getLayout().getLineStart(line);
+                int end = textView.getLayout().getLineEnd(line);
+
+                // Match checkbox pattern
+                Matcher matcher = CHECK_PATTERN.matcher(textView.getText());
+                if (matcher.region(start, end).find() &&
+                    matcher.end() >= selection)
+                {
+                    Editable editable = textView.getEditableText();
+                    switch (editable.charAt(matcher.start(1)))
+                    {
+                    case 'x':
+                    case 'X':
+                        editable.replace(matcher.start(1), matcher.end(1), " ");
+                        break;
+
+                    case ' ':
+                        editable.replace(matcher.start(1), matcher.end(1), "x");
+                        break;
+                    }
+                }
+            });
+
             // On long click
             textView.setOnLongClickListener(v ->
             {
@@ -1198,9 +1259,12 @@ public class Diary extends Activity
         SharedPreferences preferences =
             PreferenceManager.getDefaultSharedPreferences(this);
 
+        theme = Integer.parseInt(preferences.getString(Settings.PREF_THEME,
+                                                       "0"));
+
         copyMedia = preferences.getBoolean(Settings.PREF_COPY_MEDIA, false);
         custom = preferences.getBoolean(Settings.PREF_CUSTOM, true);
-        darkTheme = preferences.getBoolean(Settings.PREF_DARK_THEME, false);
+        extended = preferences.getBoolean(Settings.PREF_EXTENDED, true);
         external = preferences.getBoolean(Settings.PREF_EXTERNAL, false);
         markdown = preferences.getBoolean(Settings.PREF_MARKDOWN, true);
         useIndex = preferences.getBoolean(Settings.PREF_USE_INDEX, false);
@@ -1214,6 +1278,8 @@ public class Diary extends Activity
                                            DatePickerPreference.DEFAULT_VALUE);
         // Folder
         folder = preferences.getString(Settings.PREF_FOLDER, DIARY);
+        if (folder.isEmpty())
+            folder = DIARY;
 
         // Link template
         template = preferences.getString(Settings.PREF_INDEX_TEMPLATE,
@@ -1504,8 +1570,13 @@ public class Diary extends Activity
                 if ((uri != null) && (uri.getScheme() != null) &&
                         (uri.getScheme().equalsIgnoreCase(HTTP) ||
                          uri.getScheme().equalsIgnoreCase(HTTPS)))
-                    addLink(uri, intent.getStringExtra(Intent.EXTRA_TITLE),
-                            true);
+                {
+                    String title = intent.hasExtra(Intent.EXTRA_TITLE)?
+                        intent.getStringExtra(Intent.EXTRA_TITLE):
+                        intent.getStringExtra(Intent.EXTRA_SUBJECT);
+                    addLink(uri, title, true);
+                }
+
                 else
                 {
                     textView.append(text);
@@ -1523,9 +1594,13 @@ public class Diary extends Activity
                 if (CONTENT.equalsIgnoreCase(uri.getScheme()))
                     uri = resolveContent(uri);
 
-                addLink(uri, intent.getStringExtra(Intent.EXTRA_TITLE), true);
+                String title = intent.hasExtra(Intent.EXTRA_TITLE)?
+                    intent.getStringExtra(Intent.EXTRA_TITLE):
+                    intent.getStringExtra(Intent.EXTRA_SUBJECT);
+                addLink(uri, title, true);
             }
         }
+
         else if (type.startsWith(IMAGE) ||
                  type.startsWith(AUDIO) ||
                  type.startsWith(VIDEO))
@@ -1708,9 +1783,6 @@ public class Diary extends Activity
     // print
     private void print()
     {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
-            return;
-
         // Get a PrintManager instance
         PrintManager printManager = (PrintManager)
             getSystemService(PRINT_SERVICE);
@@ -1865,14 +1937,11 @@ public class Diary extends Activity
                 break;
 
             case DialogInterface.BUTTON_NEUTRAL:
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-                {
-                    Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-                    intent.setType(APPLICATION_ZIP);
-                    intent.addCategory(Intent.CATEGORY_OPENABLE);
-                    intent.putExtra(Intent.EXTRA_TITLE, name);
-                    startActivityForResult(intent, CREATE_BACKUP);
-                }
+                Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                intent.setType(APPLICATION_ZIP);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.putExtra(Intent.EXTRA_TITLE, name);
+                startActivityForResult(intent, CREATE_BACKUP);
                 break;
             }
         });
@@ -1889,8 +1958,7 @@ public class Diary extends Activity
         // Add the buttons
         builder.setPositiveButton(R.string.save, listener);
         builder.setNegativeButton(android.R.string.cancel, listener);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-            builder.setNeutralButton(R.string.storage, listener);
+        builder.setNeutralButton(R.string.storage, listener);
 
         // Create edit text
         LayoutInflater inflater = (LayoutInflater) builder.getContext()
@@ -1924,14 +1992,16 @@ public class Diary extends Activity
     private File getYear(int year)
     {
         return new File(getHome(), String.format(Locale.ENGLISH,
-                                                 YEAR_FORMAT, year));
+                                                 YEAR_FORMAT,
+                                                 year));
     }
 
     // getMonth
     private File getMonth(int year, int month)
     {
         return new File(getYear(year), String.format(Locale.ENGLISH,
-                                                     MONTH_FORMAT, month + 1));
+                                                     MONTH_FORMAT,
+                                                     month + 1));
     }
 
     // getDay
@@ -1939,13 +2009,15 @@ public class Diary extends Activity
     {
         File folder = getMonth(year, month);
         File file = new File(folder, String.format(Locale.ENGLISH,
-                                                   DAY_FORMAT, day));
+                                                   DAY_FORMAT,
+                                                   day));
         if (file.exists())
             return file;
 
         else if (markdown)
             return new File(folder, String.format(Locale.ENGLISH,
-                                                  MD_FORMAT, day));
+                                                  MD_FORMAT,
+                                                  day));
         else
             return file;
     }
@@ -2281,47 +2353,18 @@ public class Diary extends Activity
 
     // updateWidgets
     @SuppressWarnings("deprecation")
-    @SuppressLint("InlinedApi")
     private void updateWidgets(CharSequence text)
     {
-        Calendar today = Calendar.getInstance();
-        if (currEntry != null &&
-            currEntry.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
-            currEntry.get(Calendar.MONTH) == today.get(Calendar.MONTH) &&
-            currEntry.get(Calendar.DATE) == today.get(Calendar.DATE))
-        {
-            // Get date
-            DateFormat format = DateFormat.getDateInstance(DateFormat.MEDIUM);
-            String date = format.format(today.getTime());
+        // Get manager
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+        ComponentName provider = new ComponentName
+            (this, DiaryWidgetProvider.class);
 
-            if (markdown)
-            {
-                // Use commonmark
-                Parser parser = Parser.builder().build();
-                Node document = parser.parse(text.toString());
-                HtmlRenderer renderer = HtmlRenderer.builder().build();
+        int appWidgetIds[] = appWidgetManager.getAppWidgetIds(provider);
 
-                String html = renderer.render(document);
-                text = Html.fromHtml(html);
-            }
-
-            // Create an Intent to launch Diary
-            Intent intent = new Intent(this, Diary.class);
-            PendingIntent pendingIntent =
-                PendingIntent.getActivity(this, 0, intent,
-                                          PendingIntent.FLAG_UPDATE_CURRENT |
-                                          PendingIntent.FLAG_IMMUTABLE);
-
-            AppWidgetManager manager = AppWidgetManager.getInstance(this);
-            ComponentName provider = new
-                ComponentName(this, DiaryWidgetProvider.class);
-            RemoteViews views = new
-                RemoteViews(getPackageName(), R.layout.widget);
-            views.setOnClickPendingIntent(R.id.widget, pendingIntent);
-            views.setTextViewText(R.id.header, date);
-            views.setTextViewText(R.id.entry, text);
-            manager.updateAppWidget(provider, views);
-        }
+        Intent broadcast = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        broadcast.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+        sendBroadcast(broadcast);
     }
 
     // readAssetFile
@@ -2536,6 +2579,17 @@ public class Diary extends Activity
         }
 
         entry = true;
+    }
+
+    // changeDate
+    private void changeDate(long entry)
+    {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(entry);
+        Calendar date = new GregorianCalendar(calendar.get(Calendar.YEAR),
+                                              calendar.get(Calendar.MONTH),
+                                              calendar.get(Calendar.DATE));
+        changeDate(date);
     }
 
     // prevEntry
@@ -2760,19 +2814,59 @@ public class Diary extends Activity
             title = uri.getLastPathSegment();
 
         String url = uri.toString();
-        String linkText = String.format(LINK_TEMPLATE, title, url);
-
-        if (append)
-            textView.append(linkText);
-
-        else
+        addLinkDialog(url, title, (dialog, id) ->
         {
-            Editable editable = textView.getEditableText();
-            int position = textView.getSelectionStart();
-            editable.insert(position, linkText);
-        }
+            switch (id)
+            {
+            case DialogInterface.BUTTON_POSITIVE:
+                EditText text = ((Dialog) dialog).findViewById(R.id.pathText);
+                String string = text.getText().toString();
 
-        loadMarkdown();
+                // Ignore empty string
+                if (string.isEmpty())
+                    return;
+
+                String linkText = String.format(LINK_TEMPLATE, string, url);
+
+                if (append)
+                    textView.append(linkText);
+
+                else
+                {
+                    Editable editable = textView.getEditableText();
+                    int position = textView.getSelectionStart();
+                    editable.insert(position, linkText);
+                }
+
+                loadMarkdown();
+                break;
+            }
+        });
+    }
+
+    // addLinkDialog
+    private void addLinkDialog(String url, String title,
+                               DialogInterface.OnClickListener listener)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.addLink);
+        builder.setMessage(url);
+
+        // Add the buttons
+        builder.setPositiveButton(R.string.addLink, listener);
+        builder.setNegativeButton(android.R.string.cancel, listener);
+
+        // Create edit text
+        LayoutInflater inflater = (LayoutInflater) builder.getContext()
+            .getSystemService(LAYOUT_INFLATER_SERVICE);
+        View view = inflater.inflate(R.layout.save_path, null);
+        builder.setView(view);
+
+        // Create the AlertDialog
+        AlertDialog dialog = builder.show();
+        TextView text = dialog.findViewById(R.id.pathText);
+        text.setHint("");
+        text.setText(title);
     }
 
     // addMap
@@ -2874,7 +2968,7 @@ public class Diary extends Activity
         toast.setGravity(Gravity.CENTER, 0, 0);
         // Fix for android 13
         View view = toast.getView();
-        if (view != null && Build.VERSION.SDK_INT > Build.VERSION_CODES.P)
+        if (view != null && Build.VERSION.SDK_INT > VERSION_CODE_S_V2)
             view.setBackgroundResource(R.drawable.toast_frame);
         toast.show();
     }
@@ -2948,7 +3042,7 @@ public class Diary extends Activity
         super.onActionModeStarted(mode);
 
         // Not on markdown view
-        if (!shown)
+        if (!shown && extended)
         {
             // Get the start and end of the selection
             int start = textView.getSelectionStart();
@@ -3293,7 +3387,7 @@ public class Diary extends Activity
                 markdownView.findNext(true);
 
             // Use regex search and spannable for highlighting
-            else
+            else if (matcher != null)
             {
                 // Find next text
                 if (matcher.find())

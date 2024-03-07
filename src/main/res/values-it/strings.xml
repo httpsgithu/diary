@@ -52,6 +52,11 @@
   <string name="pref_markdown_summ">
     Utilizza il Markdown per la formattazione
   </string>
+  <string name="selection">Selezione</string>
+  <string name="pref_extended">Usa la selezione estesa</string>
+  <string name="pref_extended_summ">
+    Utilizzare la selezione estesa durante la modifica delle voci
+  </string>
   <string name="media">Media</string>
   <string name="pref_copy_media">Backup risorse esterne</string>
   <string name="pref_copy_media_summ">
@@ -76,10 +81,6 @@
   <string name="pref_template_page">Pagina di template</string>
   <string name="pref_index_template">Modello di indice</string>
   <string name="theme">Tema</string>
-  <string name="pref_dark_theme">Scuro</string>
-  <string name="pref_dark_theme_summ">
-    Utilizza il tema scuro durante la modifica
-  </string>
   <string name="about">Altro su</string>
   <string name="pref_about_summ"><a
   href="https://github.com/billthefarmer/diary/releases/latest">Versione

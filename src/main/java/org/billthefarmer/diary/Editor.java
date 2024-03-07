@@ -28,6 +28,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -46,6 +47,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+// Editor
+@SuppressWarnings("deprecation")
 public class Editor extends Activity
 {
     public final static String TAG = "Editor";
@@ -72,11 +75,35 @@ public class Editor extends Activity
         SharedPreferences preferences =
             PreferenceManager.getDefaultSharedPreferences(this);
 
-        boolean darkTheme =
-                preferences.getBoolean(Settings.PREF_DARK_THEME, false);
+        int theme = Integer.parseInt(preferences.getString(Settings.PREF_THEME,
+                                                           "0"));
 
-        if (!darkTheme)
+        Configuration config = getResources().getConfiguration();
+        int night = config.uiMode & Configuration.UI_MODE_NIGHT_MASK;
+
+        switch (theme)
+        {
+        case Diary.LIGHT:
             setTheme(R.style.AppTheme);
+            break;
+
+        case Diary.DARK:
+            setTheme(R.style.AppDarkTheme);
+            break;
+
+        case Diary.SYSTEM:
+            switch (night)
+            {
+            case Configuration.UI_MODE_NIGHT_NO:
+                setTheme(R.style.AppTheme);
+                break;
+
+            case Configuration.UI_MODE_NIGHT_YES:
+                setTheme(R.style.AppDarkTheme);
+                break;
+            }
+            break;
+        }
 
         setContentView(R.layout.editor);
 

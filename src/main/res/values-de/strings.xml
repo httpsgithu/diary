@@ -53,6 +53,11 @@
   <string name="pref_markdown_summ">
     Nutze Markdown zur Textformatierung
   </string>
+  <string name="selection">Auswahl</string>
+  <string name="pref_extended">Erweiterte Auswahl verwenden </string>
+  <string name="pref_extended_summ">
+    Erweiterte Auswahl beim Bearbeiten von Einträgen verwenden
+  </string>
   <string name="media">Medien</string>
   <string name="pref_copy_media">Bilder kopieren</string>
   <string name="pref_copy_media_summ">
@@ -77,10 +82,6 @@
   <string name="pref_template_page">Templateseite</string>
   <string name="pref_index_template">Indexvorlage</string>
   <string name="theme">Thema</string>
-  <string name="pref_dark_theme">Dunkel</string>
-  <string name="pref_dark_theme_summ">
-    Verwenden Sie ein dunkles Design zum Bearbeiten
-  </string>
   <string name="about">Über</string>
   <string name="pref_about_summ"><a
   href="https://github.com/billthefarmer/diary/releases/latest">Tagebuchversion

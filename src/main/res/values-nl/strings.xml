@@ -53,6 +53,11 @@
   <string name="pref_markdown_summ">
     Markdown gebruiken om items te voorzien van opmaak
   </string>
+  <string name="selection">Selectie</string>
+  <string name="pref_extended">Uitgebreide selectie gebruiken</string>
+  <string name="pref_extended_summ">
+    Uitgebreide selectie gebruiken bij het bewerken van items
+  </string>
   <string name="media">Media</string>
   <string name="pref_copy_media">Afbeeldingen kopiëren</string>
   <string name="pref_copy_media_summ">
@@ -64,10 +69,6 @@
   </string>
   <string name="folder">Map</string>
   <string name="theme">Thema</string>
-  <string name="pref_dark_theme">Donker</string>
-  <string name="pref_dark_theme_summ">
-    Donker thema gebruiken in bewerkmodus
-  </string>
   <string name="index">Index</string>
   <string name="pref_use_index">Index gebruiken</string>
   <string name="pref_use_index_summ">
